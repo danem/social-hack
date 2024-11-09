@@ -1,0 +1,26 @@
+[project]
+name = "orbit-backend"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "alembic>=1.13.3",
+    "docx2txt",
+    "fastapi[standard]>=0.115.0",
+    "fsspec>=2024.9.0",
+    "ipython>=8.28.0",
+    "jupyter>=1.1.1",
+    "llama-index-embeddings-openai>=0.2.5",
+    "llama-index-vector-stores-lantern>=0.2.1",
+    "llama-index>=0.11.16",
+    "psycopg2-binary>=2.9.9",
+    "pyaudio>=0.2.14",
+    "pydantic-settings>=2.5.2",
+    "sqlalchemy>=2.0.35",
+    "supabase>=2.10.0",
+]
+
+[tool.ruff]
+indent-width = 4
+line-length = 120
