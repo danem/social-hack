@@ -22,6 +22,7 @@ type Client = {
   id: number;
   name: string;
   issue: string;
+  location: string;
   assigned_to: string;
   created_on: string;
   created_by: string;
@@ -244,7 +245,10 @@ export function ClientDetails() {
                 </div>
               )}
               {activeTab === 'Legal Draft' && (
-                <LegalDraft />
+                <LegalDraft 
+                  clientName={client?.name || 'Unknown Client'} 
+                  clientLocation={client?.location || 'Unknown Location'}
+                />
               )}
             </div>
           </section>
