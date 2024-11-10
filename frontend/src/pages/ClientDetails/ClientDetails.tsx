@@ -3,11 +3,18 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
 import { SidebarNav } from '@components/SidebarNav/SidebarNav';
+import { Checklist } from '../Checklist/Checklist';
 
 type TimelineEvent = {
   type: string;
   description: string;
   date: string;
+};
+
+type ChecklistItem = {
+  id: number;
+  title: string;
+  completed: boolean;
 };
 
 type Client = {
@@ -21,7 +28,8 @@ type Client = {
   petitionWorthy: boolean;
   damagesEstimate: string;
   notes: string;
-  timeline: TimelineEvent[]; // Ensure timeline is always an array
+  timeline: TimelineEvent[];
+  checklist: ChecklistItem[];
 };
 
 export function ClientDetails() {
@@ -34,15 +42,19 @@ export function ClientDetails() {
       if (id) {
         const { data, error } = await supabase
           .from('users')
-          .select('*') // Ensure 'timeline' is included in the query
+          .select('*') // Ensure 'timeline' and 'checklist' are included in the query
           .eq('id', id)
           .single();
 
         if (error) {
           console.error('Error fetching client details:', error);
         } else {
-          // Ensure 'timeline' is an array; if not, set a default empty array
-          setClient({ ...data, timeline: Array.isArray(data.timeline) ? data.timeline : [] });
+          // Ensure 'timeline' and 'checklist' are arrays; set default empty arrays if not
+          setClient({
+            ...data,
+            timeline: Array.isArray(data.timeline) ? data.timeline : [],
+            checklist: Array.isArray(data.checklist) ? data.checklist : []
+          });
         }
         setLoading(false);
       }
@@ -77,7 +89,12 @@ export function ClientDetails() {
               </div>
             </div>
           </section>
-          
+
+          {/* Checklist Section */}
+          <section className="mt-6">
+            <Checklist items={client.checklist} />
+          </section>
+
           {/* Generate Legal Draft Section */}
           <section className="mt-6">
             <h2 className="text-xl font-semibold mb-2">Generate Legal Draft</h2>
