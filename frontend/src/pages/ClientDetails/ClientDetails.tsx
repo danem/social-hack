@@ -1,4 +1,3 @@
-// ClientDetails.tsx
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '@utils/supabaseClient';
@@ -39,7 +38,6 @@ type Document = {
   metadata?: {
     file_name?: string;
     section_summary?: string;
-    // Add any other relevant fields you expect in `metadata`
   };
   similarity?: number;
 };
@@ -50,9 +48,11 @@ export function ClientDetails() {
   const [loading, setLoading] = useState(true);
   const [actionChecklist, setActionChecklist] = useState<ChecklistItem[]>([]);
   const [isChecklistLoading, setIsChecklistLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('Intake Process'); // New state for active tab
+  const [activeTab, setActiveTab] = useState('Intake Process');
   const [relatedDocuments, setRelatedDocuments] = useState<Document[]>([]);
   const [documentsLoading, setDocumentsLoading] = useState(true);
+  const [latestTranscript, setLatestTranscript] = useState<string | null>(null);
+  const [transcriptLoading, setTranscriptLoading] = useState(true);
 
   useEffect(() => {
     const fetchClient = async () => {
@@ -93,6 +93,9 @@ export function ClientDetails() {
       try {
         const transcript = await fetchLatestTranscript();
         console.log('transcript', transcript);
+        setLatestTranscript(transcript || 'No recent transcript available');
+        setTranscriptLoading(false);
+
         if (transcript) {
           const actionItems = await getActionItems(transcript);
           console.log('action items', actionItems);
@@ -223,8 +226,15 @@ export function ClientDetails() {
               )}
               {activeTab === 'Communications' && (
                 <div>
-                  <h3 className="text-lg font-semibold mb-2">Communications Log</h3>
-                  <p>Communication details...</p>
+                  <h3 className="text-lg font-semibold mb-2">Latest Transcript</h3>
+                  {transcriptLoading ? (
+                    <div className="flex justify-center items-center h-32">
+                      <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent border-solid rounded-full animate-spin"></div>
+                      <p className="ml-4 text-lg">Fetching latest transcript...</p>
+                    </div>
+                  ) : (
+                    <p>{latestTranscript}</p>
+                  )}
                 </div>
               )}
               {activeTab === 'Files' && (
