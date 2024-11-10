@@ -1,6 +1,7 @@
 // App.tsx
 import { SidebarNav } from "@components/SidebarNav/SidebarNav";
 import React from "react";
+import { Link } from "react-router-dom";
 
 // Define types for the data structures
 type Item = {
@@ -32,8 +33,10 @@ function Column ({ title, count, items }: ColumnData){
                 </div>
             {items.map((item, index) => (
                 <div key={index} className="bg-gray-100 hover:bg-slate-300 p-2 rounded-lg shadow-inner mb-2 cursor-pointer">
+                  <Link to='/client-details'>
                     <p>{item.name} - {item.issue}</p>
                     <p className="text-sm text-gray-500">{item.location}</p>
+                  </Link>
                 </div>
             ))}
             </div>
