@@ -13,6 +13,5 @@ wheels/
 # Custom
 .mypy_cache
 secrets/
-notebooks/
 lantern_data/
 data/

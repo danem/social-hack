@@ -13,10 +13,12 @@ dependencies = [
     "jupyter>=1.1.1",
     "llama-index-embeddings-openai>=0.2.5",
     "llama-index-vector-stores-lantern>=0.2.1",
+    "llama-index-vector-stores-supabase>=0.2.0",
     "llama-index>=0.11.16",
     "psycopg2-binary>=2.9.9",
     "pyaudio>=0.2.14",
     "pydantic-settings>=2.5.2",
+    "python-dotenv>=1.0.1",
     "sqlalchemy>=2.0.35",
     "supabase>=2.10.0",
 ]
