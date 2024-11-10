@@ -67,6 +67,7 @@
     "@headlessui/react": "^2.2.0",
     "@heroicons/react": "^2.1.5",
     "@reduxjs/toolkit": "1.8",
+    "@supabase/supabase-js": "^2.46.1",
     "@types/react": "^18.0.9",
     "@types/react-dom": "^18.0.5",
     "classnames": "^2.2.6",
