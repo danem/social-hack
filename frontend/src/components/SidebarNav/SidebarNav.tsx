@@ -1,4 +1,4 @@
-import { Sidebar, SidebarItem, SidebarBody, SidebarLabel, SidebarDivider, SidebarFooter } from "@components/catalyst/sidebar";
+import { Sidebar, SidebarItem, SidebarBody, SidebarLabel, SidebarDivider, SidebarFooter, SidebarHeader } from "@components/catalyst/sidebar";
 import React from "react";
 import ChartBarIcon from '@heroicons/react/24/solid/ChartBarIcon'
 import InboxStackIcon from '@heroicons/react/24/solid/InboxStackIcon'
@@ -12,6 +12,9 @@ export function SidebarNav () {
     return (
         <Sidebar className="h-screen">
             <SidebarBody>
+                <SidebarHeader>
+                    <h1>FairHaven</h1>
+                </SidebarHeader>
                 <SidebarItem><ChartBarIcon className="w-4"/><SidebarLabel>Dashboard</SidebarLabel></SidebarItem>
                 <SidebarItem><InboxStackIcon className="w-4"/><SidebarLabel>Pipeline</SidebarLabel></SidebarItem>
                 <SidebarItem><UserIcon className="w-4"/><SidebarLabel>Contacts</SidebarLabel></SidebarItem>
