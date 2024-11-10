@@ -9,31 +9,21 @@ export default function Transcriptor() {
     const startRecording = async () => {
         try {
             setIsRecording(true);
-
-            // Get access to the microphone
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             mediaRecorderRef.current = new MediaRecorder(stream);
 
             let chunks: Blob[] = [];
-
-            // Collect audio data chunks
             mediaRecorderRef.current.ondataavailable = (event: BlobEvent) => {
                 if (event.data.size > 0) {
                     chunks.push(event.data);
                 }
             };
 
-            // Handle stopping and sending audio data
             mediaRecorderRef.current.onstop = async () => {
                 const audioBlob = new Blob(chunks, { type: 'audio/webm' });
                 chunks = [];
+                const audioFile = new File([audioBlob], 'audio.webm', { type: 'audio/webm' });
 
-                // Convert Blob to a File to send to the API
-                const audioFile = new File([audioBlob], 'audio.webm', {
-                    type: 'audio/webm',
-                });
-
-                // Create FormData to send the audio file
                 const formData = new FormData();
                 formData.append('file', audioFile);
                 formData.append('model', 'whisper-1');
@@ -51,10 +41,9 @@ export default function Transcriptor() {
                     const text = result.text || 'Transcription failed';
                     setTranscription(text);
 
-                    // Save the transcription to Supabase
                     const { data, error } = await supabase
                         .from('transcriptions')
-                        .insert([{ text }]); // Insert the transcription into the 'transcriptions' table
+                        .insert([{ text }]);
 
                     if (error) {
                         console.error('Error saving to Supabase:', error);
@@ -82,12 +71,39 @@ export default function Transcriptor() {
     };
 
     return (
-        <div>
-            <h1>Live Transcription with OpenAI Whisper</h1>
-            <button onClick={startRecording} disabled={isRecording}>Start Recording</button>
-            <button onClick={stopRecording} disabled={!isRecording}>Stop Recording</button>
-            <p>{isRecording ? 'Recording...' : 'Recording stopped.'}</p>
-            <p>Transcription: {transcription}</p>
+        <div className="max-w-xl mx-auto p-6 bg-white rounded-lg shadow-md mt-10">
+            <h1 className="text-2xl font-semibold text-center mb-4">Live Transcription with OpenAI Whisper</h1>
+            <div className="flex justify-center space-x-4 mb-6">
+                <button
+                    onClick={startRecording}
+                    disabled={isRecording}
+                    className={`px-4 py-2 rounded-lg font-medium ${
+                        isRecording ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-500 hover:bg-green-600 text-white'
+                    }`}
+                >
+                    Start Recording
+                </button>
+                <button
+                    onClick={stopRecording}
+                    disabled={!isRecording}
+                    className={`px-4 py-2 rounded-lg font-medium ${
+                        !isRecording ? 'bg-gray-400 cursor-not-allowed' : 'bg-red-500 hover:bg-red-600 text-white'
+                    }`}
+                >
+                    Stop Recording
+                </button>
+            </div>
+            <p className="text-center mb-4">
+                {isRecording ? (
+                    <span className="text-yellow-600 font-medium">Recording...</span>
+                ) : (
+                    <span className="text-gray-600">Recording stopped.</span>
+                )}
+            </p>
+            <div className="p-4 border rounded-lg bg-gray-100 text-gray-800">
+                <h2 className="font-semibold mb-2">Transcription:</h2>
+                <p className="whitespace-pre-wrap">{transcription || 'No transcription available yet.'}</p>
+            </div>
         </div>
     );
 }
