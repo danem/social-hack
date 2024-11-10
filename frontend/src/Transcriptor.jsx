@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import * as sdk from 'microsoft-cognitiveservices-speech-sdk';
 
@@ -8,20 +8,23 @@ const supabase = createClient(process.env.REACT_APP_SUPA_URL, process.env.REACT_
 const Transcriptor = () => {
     const [isRecording, setIsRecording] = useState(false);
     const [text, setText] = useState('');
-    let recognizer;
+    const recognizerRef = useRef(null);
 
     useEffect(() => {
         // Subscribe to the 'transcriptions' table for real-time updates
         const channel = supabase
             .channel('transcriptions')
             .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'transcriptions' }, (payload) => {
-                setText((prev) => prev + payload.new.text + ' ');
+                setText(payload.new.text);
             })
             .subscribe();
 
         // Cleanup subscription on component unmount
         return () => {
             supabase.removeChannel(channel);
+            if (recognizerRef.current) {
+                recognizerRef.current.close();
+            }
         };
     }, []);
 
@@ -32,11 +35,12 @@ const Transcriptor = () => {
                 const speechConfig = sdk.SpeechConfig.fromSubscription(process.env.REACT_APP_AZURE_API_KEY, 'eastus'); // Replace 'eastus' with your region
                 speechConfig.speechRecognitionLanguage = 'en-US'; // Set the language
                 const audioConfig = sdk.AudioConfig.fromDefaultMicrophoneInput();
-                recognizer = new sdk.SpeechRecognizer(speechConfig, audioConfig);
+                const recognizer = new sdk.SpeechRecognizer(speechConfig, audioConfig);
+                recognizerRef.current = recognizer; // Store recognizer in ref for proper handling
 
                 // Handle real-time transcription
                 recognizer.recognizing = (s, e) => {
-                    setText((prev) => prev + e.result.text + ' ');
+                    setText(e.result.text); // Replace current text with the new result
                 };
 
                 recognizer.recognized = async (s, e) => {
@@ -50,17 +54,23 @@ const Transcriptor = () => {
 
                 recognizer.canceled = (s, e) => {
                     console.error('Recognition canceled:', e.reason);
-                    recognizer.stopContinuousRecognitionAsync();
-                    setIsRecording(false);
+                    recognizer.stopContinuousRecognitionAsync(() => {
+                        setIsRecording(false);
+                        console.log('Recognition stopped.');
+                    });
                 };
 
                 recognizer.sessionStopped = (s, e) => {
                     console.log('Session stopped.');
-                    recognizer.stopContinuousRecognitionAsync();
-                    setIsRecording(false);
+                    recognizer.stopContinuousRecognitionAsync(() => {
+                        setIsRecording(false);
+                        console.log('Recognition stopped.');
+                    });
                 };
 
-                recognizer.startContinuousRecognitionAsync();
+                recognizer.startContinuousRecognitionAsync(() => {
+                    console.log('Recognition started.');
+                });
                 setIsRecording(true);
                 setText('Recording in progress...');
             } catch (error) {
@@ -69,11 +79,15 @@ const Transcriptor = () => {
             }
         } else {
             // Stop recording
-            if (recognizer) {
-                recognizer.stopContinuousRecognitionAsync(() => {
+            setIsRecording(false);
+            if (recognizerRef.current) {
+                recognizerRef.current.stopContinuousRecognitionAsync(() => {
                     console.log('Stopped recording.');
-                    setIsRecording(false);
                     setText('Recording stopped.');
+                    recognizerRef.current.close(); // Close recognizer to free up resources
+                }, (error) => {
+                    console.error('Error stopping recognition:', error);
+                    setIsRecording(false);
                 });
             }
         }
