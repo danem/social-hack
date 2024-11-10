@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ClientManagement } from '../ClientManagement/ClientManagement';
 import { ClientDetails } from '../ClientDetails/ClientDetails';
 import { SidebarNav } from '@components/SidebarNav/SidebarNav';
+import Transcriptor from '@components/Transcriptor/Transcriptor';
 
 export default function App() {
   return (
@@ -14,6 +15,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<ClientManagement />} />
             <Route path="/client/:id" element={<ClientDetails />} />
+            <Route path="/voice" element={<Transcriptor />} />
           </Routes>
         </main>
       </div>

@@ -1,9 +1,10 @@
 // ClientDetails.tsx
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { supabase } from '../../supabaseClient';
+import { supabase } from '@utils/supabaseClient';
 import { SidebarNav } from '@components/SidebarNav/SidebarNav';
 import { Checklist } from '../Checklist/Checklist';
+import { fetchLatestTranscript, getActionItems, queryDocuments } from '../../models/documents';
 
 type TimelineEvent = {
   type: string;
@@ -28,14 +29,29 @@ type Client = {
   petition_worthy: boolean;
   damages_estimate: string;
   notes: string;
-  timeline: TimelineEvent[]; // Now treated as a structured array
+  timeline: TimelineEvent[];
   checklist: ChecklistItem[];
+};
+
+type Document = {
+  id: string;
+  metadata?: {
+    file_name?: string;
+    section_summary?: string;
+    // Add any other relevant fields you expect in `metadata`
+  };
+  similarity?: number;
 };
 
 export function ClientDetails() {
   const { id } = useParams<{ id: string }>();
   const [client, setClient] = useState<Client | null>(null);
   const [loading, setLoading] = useState(true);
+  const [actionChecklist, setActionChecklist] = useState<ChecklistItem[]>([]);
+  const [isChecklistLoading, setIsChecklistLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('Intake Process'); // New state for active tab
+  const [relatedDocuments, setRelatedDocuments] = useState<Document[]>([]);
+  const [documentsLoading, setDocumentsLoading] = useState(true);
 
   useEffect(() => {
     const fetchClient = async () => {
@@ -50,11 +66,8 @@ export function ClientDetails() {
           console.error('Error fetching client details:', error);
         } else {
           let timelineData;
-
           try {
-            // Attempt to parse 'timeline' string to JSON
             if (typeof data.timeline === 'string') {
-              // Replace single quotes with double quotes and parse
               const sanitizedTimeline = data.timeline.replace(/'/g, '"');
               timelineData = JSON.parse(sanitizedTimeline);
             } else {
@@ -62,7 +75,7 @@ export function ClientDetails() {
             }
           } catch (parseError) {
             console.error('Error parsing timeline:', parseError);
-            timelineData = []; // Fallback to an empty array if parsing fails
+            timelineData = [];
           }
 
           setClient({
@@ -75,7 +88,37 @@ export function ClientDetails() {
       }
     };
 
+    const generateChecklistFromTranscript = async () => {
+      try {
+        const transcript = await fetchLatestTranscript();
+        console.log('transcript', transcript);
+        if (transcript) {
+          const actionItems = await getActionItems(transcript);
+          console.log('action items', actionItems);
+          const formattedChecklist = actionItems.map((item: { task: string }, index: number) => ({
+            id: index + 1,
+            title: item.task,
+            completed: false,
+          }));
+          setActionChecklist(formattedChecklist);
+
+          // Query documents based on the transcript for the "Notes" tab
+          const documents = await queryDocuments(transcript);
+          console.log("documents", documents);
+          if (documents) {
+            setRelatedDocuments(documents);
+          }
+        }
+      } catch (err) {
+        console.error('Error generating checklist or querying documents:', err);
+      } finally {
+        setIsChecklistLoading(false);
+        setDocumentsLoading(false);
+      }
+    };
+
     fetchClient();
+    generateChecklistFromTranscript();
   }, [id]);
 
   if (loading) return <div className="flex justify-center items-center h-full"><p className="text-lg">Loading...</p></div>;
@@ -104,51 +147,102 @@ export function ClientDetails() {
               </div>
             </div>
           </section>
-
-          {/* Checklist Section */}
           <section className="mt-6">
-            <Checklist items={client.checklist} />
-          </section>
-
-          {/* Generate Legal Draft Section */}
-          <section className="mt-6">
-            <h2 className="text-xl font-semibold mb-2">Generate Legal Draft</h2>
-            <p className="text-gray-600 mb-2">Optional: for a customized legal draft, upload similar petitions or legal documents.</p>
-            <div className="flex items-center space-x-4">
-              <button className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-medium">Generate</button>
-              <input type="file" className="border border-gray-300 rounded-lg p-2" />
-            </div>
+                  {isChecklistLoading ? (
+                    <div className="flex justify-center items-center h-32">
+                      <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent border-solid rounded-full animate-spin"></div>
+                      <p className="ml-4 text-lg">Generating checklist...</p>
+                    </div>
+                  ) : (
+                    <Checklist items={actionChecklist.length > 0 ? actionChecklist : client.checklist} />
+                  )}
           </section>
 
           {/* Tabs Section */}
           <section className="mt-6">
             <nav className="border-b border-gray-300 mb-4">
               <ul className="flex space-x-4">
-                <li className="text-orange-600 font-semibold">Intake Process</li>
-                <li className="text-gray-600">Notes</li>
-                <li className="text-gray-600">Communications</li>
-                <li className="text-gray-600">Files</li>
-                <li className="text-gray-600">Legal Draft</li>
+                {['Intake Process', 'Notes', 'Communications', 'Files', 'Legal Draft'].map(tab => (
+                  <li
+                    key={tab}
+                    className={`cursor-pointer ${activeTab === tab ? 'text-orange-600 font-semibold' : 'text-gray-600'}`}
+                    onClick={() => setActiveTab(tab)}
+                  >
+                    {tab}
+                  </li>
+                ))}
               </ul>
             </nav>
+            
             <div>
-              <h3 className="text-lg font-semibold mb-2">Initial Consultation</h3>
-              <p>{client.notes}</p>
+              {activeTab === 'Intake Process' && (
+                <section className="mt-6">
+                  <h2 className="text-xl font-semibold mb-2">Timeline</h2>
+                  <ul className="space-y-4">
+                    {client.timeline.map((event, index) => (
+                      <li key={index} className="border-l-4 border-orange-500 pl-4">
+                        <p className="font-medium">{event.type}</p>
+                        <p>{event.description}</p>
+                        <p className="text-sm text-gray-500">{event.date}</p>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
+              {activeTab === 'Notes' && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Related Documents</h3>
+                  {documentsLoading ? (
+                    <div className="flex justify-center items-center h-32">
+                      <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent border-solid rounded-full animate-spin"></div>
+                      <p className="ml-4 text-lg">Fetching related documents...</p>
+                    </div>
+                  ) : (
+                    relatedDocuments.length > 0 ? (
+                      <ul className="space-y-4">
+                        {relatedDocuments.map((doc, index) => (
+                          <li key={index} className="p-4 border border-gray-300 rounded-lg shadow-sm">
+                            <h4 className="text-md font-bold">
+                              {doc.metadata?.file_name || 'Untitled Document'}
+                            </h4>
+                            <p>
+                              {doc.metadata?.section_summary || 'No summary available'}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              Similarity Score: {doc.similarity ? doc.similarity.toFixed(2) : 'N/A'}
+                            </p>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p>No related documents found.</p>
+                    )
+                  )}
+                </div>
+              )}
+              {activeTab === 'Communications' && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Communications Log</h3>
+                  <p>Communication details...</p>
+                </div>
+              )}
+              {activeTab === 'Files' && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Uploaded Files</h3>
+                  <p>Files related to the case...</p>
+                </div>
+              )}
+              {activeTab === 'Legal Draft' && (
+                <section className="mt-6">
+                  <h2 className="text-xl font-semibold mb-2">Generate Legal Draft</h2>
+                  <p className="text-gray-600 mb-2">Optional: for a customized legal draft, upload similar petitions or legal documents.</p>
+                  <div className="flex items-center space-x-4">
+                    <button className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-medium">Generate</button>
+                    <input type="file" className="border border-gray-300 rounded-lg p-2" />
+                  </div>
+                </section>
+              )}
             </div>
-          </section>
-
-          {/* Timeline */}
-          <section className="mt-6">
-            <h2 className="text-xl font-semibold mb-2">Timeline</h2>
-            <ul className="space-y-4">
-              {client.timeline.map((event, index) => (
-                <li key={index} className="border-l-4 border-orange-500 pl-4">
-                  <p className="font-medium">{event.type}</p>
-                  <p>{event.description}</p>
-                  <p className="text-sm text-gray-500">{event.date}</p>
-                </li>
-              ))}
-            </ul>
           </section>
         </div>
       </main>
