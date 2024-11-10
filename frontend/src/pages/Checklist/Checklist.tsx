@@ -1,3 +1,5 @@
+import { Button } from '@components/catalyst/button';
+import { Checkbox } from '@components/catalyst/checkbox';
 import React, { useState } from 'react';
 
 type ChecklistItem = {
@@ -34,7 +36,7 @@ export function Checklist({ items, loading = false }: ChecklistProps) {
       <div className="flex justify-center items-center h-screen bg-gray-100">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent border-solid rounded-full animate-spin mb-4"></div>
-          <p className="text-lg font-semibold">Loading checklist items...</p>
+          <p className="text-lg font-semibold">Action Items...</p>
         </div>
       </div>
     );
@@ -42,12 +44,14 @@ export function Checklist({ items, loading = false }: ChecklistProps) {
 
   return (
     <div className="p-4 bg-white rounded-lg shadow-md">
-      <h2 className="text-xl font-semibold mb-2">Checklists</h2>
-      <div className="w-full bg-gray-200 rounded-full h-6 mb-4">
+      <h2 className="text-xl font-semibold mb-2">Action Items</h2>
+      <div className="w-full bg-gray-200 rounded-full h-6 mb-4 relative">
         <div
-          className="bg-green-500 h-6 rounded-full text-center text-white"
+          className="bg-green-500 h-6 rounded-full text-center text-white absolute"
           style={{ width: `${(completedCount / items.length) * 100}%` }}
         >
+        </div>
+        <div className='absolute w-full grow text-center'>
           {`${completedCount}/${items.length} Completed`}
         </div>
       </div>
@@ -55,26 +59,19 @@ export function Checklist({ items, loading = false }: ChecklistProps) {
         {items.map(item => (
           <li
             key={item.id}
-            className={`flex items-center p-2 border ${
+            className={`flex flex-row items-center p-2 border ${
               item.completed ? 'border-green-500' : 'border-gray-300'
             } rounded-lg`}
           >
-            <input
-              type="checkbox"
-              checked={item.completed}
-              className="mr-2"
-              readOnly
-            />
-            <span className="flex-grow">{item.title}</span>
-            <button
+            <Checkbox checked={item.completed} className='mr-4'/>
+            <span className="flex-grow max-w-[80%]">{item.title}</span>
+            <Button
+              color='blue'
               onClick={() => handleSendReminder(item.id)}
               disabled={isSending === item.id}
-              className={`ml-2 px-3 py-1 rounded text-white ${
-                isSending === item.id ? 'bg-gray-400' : 'bg-blue-500 hover:bg-blue-600'
-              }`}
             >
               {isSending === item.id ? 'Sending...' : 'Send Reminder'}
-            </button>
+            </Button>
           </li>
         ))}
       </ul>
