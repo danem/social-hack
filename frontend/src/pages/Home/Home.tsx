@@ -1,15 +1,11 @@
-// App.tsx
-import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { SidebarNav } from "@components/SidebarNav/SidebarNav";
-import { ClientDetails } from "../ClientDetails/ClientDetails";
-import { ClientManagement } from "../ClientManagement/ClientManagement";
-import { embedText, testActionItems, queryDocuments } from "../../models/documents";
+// App.tsx or main routing file
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { ClientManagement } from '../ClientManagement/ClientManagement';
+import { ClientDetails } from '../ClientDetails/ClientDetails';
+import { SidebarNav } from '@components/SidebarNav/SidebarNav';
 
-
-// Main App component
 export default function App() {
-  testActionItems().then(console.log);
   return (
     <Router>
       <div className="flex">
@@ -17,7 +13,7 @@ export default function App() {
         <main className="bg-gray-100 flex-grow p-8">
           <Routes>
             <Route path="/" element={<ClientManagement />} />
-            <Route path="/client-details" element={<ClientDetails />} />
+            <Route path="/client/:id" element={<ClientDetails />} />
           </Routes>
         </main>
       </div>

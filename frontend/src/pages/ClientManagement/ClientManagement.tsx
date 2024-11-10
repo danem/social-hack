@@ -10,6 +10,7 @@ type Item = {
   name: string;
   issue: string;
   location: string;
+  status: string; // Added status field
 };
 
 type ColumnData = {
@@ -24,25 +25,25 @@ type ColumnProps = {
   items: Item[];
 };
 
-function Column ({ title, count, items }: ColumnData){
-    return (
-        <div className="bg-slate-200 p-4 rounded-lg shadow-md">
-            <div className="bg-white p-4 rounded-lg shadow">
-                <div className="flex flex-row gap-4 align-text-top align-middle mb-3">
-                    <h2 className="text-lg font-semibold">{title}</h2>
-                    <p className="text-sm text-gray-500 mb-2">{count}</p>
-                </div>
-            {items.map((item, index) => (
-                <div key={index} className="bg-gray-100 hover:bg-slate-300 p-2 rounded-lg shadow-inner mb-2 cursor-pointer">
-                  <Link to='/client-details'>
-                    <p>{item.name} - {item.issue}</p>
-                    <p className="text-sm text-gray-500">{item.location}</p>
-                  </Link>
-                </div>
-            ))}
-            </div>
+function Column ({ title, count, items }: ColumnData) {
+  return (
+    <div className="bg-slate-200 p-4 rounded-lg shadow-md">
+      <div className="bg-white p-4 rounded-lg shadow">
+        <div className="flex flex-row gap-4 align-text-top align-middle mb-3">
+          <h2 className="text-lg font-semibold">{title}</h2>
+          <p className="text-sm text-gray-500 mb-2">{count}</p>
         </div>
-    );
+        {items.map((item, index) => (
+          <div key={index} className="bg-gray-100 hover:bg-slate-300 p-2 rounded-lg shadow-inner mb-2 cursor-pointer">
+            <Link to={`/client/${item.id}`}>
+              <p>{item.name} - {item.issue}</p>
+              <p className="text-sm text-gray-500">{item.location}</p>
+            </Link>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 export function ClientManagement() {
@@ -50,22 +51,29 @@ export function ClientManagement() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const { data, error } = await supabase.from('users').select('id, name, issue, location');
+      // Ensure your Supabase query includes 'status'
+      const { data, error } = await supabase.from('users').select('id, name, issue, location, status');
       if (error) {
         console.error('Error fetching data:', error);
         return;
       }
 
-      // Group the data as needed (example based on issue type)
-      const groupedData = [
-        {
-          title: 'Client List',
-          count: data.length,
-          items: data
-        }
-      ];
+    // Categorize data into columns based on `status`
+    const columns = [
+      { title: 'Newly Added', items: data.filter((item: Item) => item.status === 'Newly Added') },
+      { title: 'In Progress', items: data.filter((item: Item) => item.status === 'In Progress') },
+      { title: 'Completed', items: data.filter((item: Item) => item.status === 'Completed') },
+    ];
 
-      setColumnsData(groupedData);
+    // Assign the count to each column
+    const formattedColumnsData: ColumnData[] = columns.map((col) => ({
+      title: col.title,
+      count: col.items.length,
+      items: col.items
+    }));
+
+    setColumnsData(formattedColumnsData);
+
     };
 
     fetchData();
