@@ -21,14 +21,14 @@ type Client = {
   id: number;
   name: string;
   issue: string;
-  assignedTo: string;
-  createdOn: string;
-  createdBy: string;
+  assigned_to: string;
+  created_on: string;
+  created_by: string;
   urgency: string;
-  petitionWorthy: boolean;
-  damagesEstimate: string;
+  petition_worthy: boolean;
+  damages_estimate: string;
   notes: string;
-  timeline: TimelineEvent[];
+  timeline: TimelineEvent[]; // Now treated as a structured array
   checklist: ChecklistItem[];
 };
 
@@ -42,17 +42,32 @@ export function ClientDetails() {
       if (id) {
         const { data, error } = await supabase
           .from('users')
-          .select('*') // Ensure 'timeline' and 'checklist' are included in the query
+          .select('*')
           .eq('id', id)
           .single();
 
         if (error) {
           console.error('Error fetching client details:', error);
         } else {
-          // Ensure 'timeline' and 'checklist' are arrays; set default empty arrays if not
+          let timelineData;
+
+          try {
+            // Attempt to parse 'timeline' string to JSON
+            if (typeof data.timeline === 'string') {
+              // Replace single quotes with double quotes and parse
+              const sanitizedTimeline = data.timeline.replace(/'/g, '"');
+              timelineData = JSON.parse(sanitizedTimeline);
+            } else {
+              timelineData = data.timeline || [];
+            }
+          } catch (parseError) {
+            console.error('Error parsing timeline:', parseError);
+            timelineData = []; // Fallback to an empty array if parsing fails
+          }
+
           setClient({
             ...data,
-            timeline: Array.isArray(data.timeline) ? data.timeline : [],
+            timeline: timelineData,
             checklist: Array.isArray(data.checklist) ? data.checklist : []
           });
         }
@@ -78,14 +93,14 @@ export function ClientDetails() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <p><span className="font-medium">Status:</span> Newly Added</p>
-                <p><span className="font-medium">Assigned To:</span> {client.assignedTo}</p>
-                <p><span className="font-medium">Created On:</span> {client.createdOn}</p>
-                <p><span className="font-medium">Created By:</span> {client.createdBy}</p>
+                <p><span className="font-medium">Assigned To:</span> {client.assigned_to}</p>
+                <p><span className="font-medium">Created On:</span> {client.created_on}</p>
+                <p><span className="font-medium">Created By:</span> {client.created_by}</p>
               </div>
               <div className="space-y-2">
                 <p><span className="font-medium">Urgency:</span> {client.urgency}</p>
-                <p><span className="font-medium">Petition-Worthy:</span> {client.petitionWorthy ? 'Yes' : 'No'}</p>
-                <p><span className="font-medium">Damages (est):</span> {client.damagesEstimate}</p>
+                <p><span className="font-medium">Petition-Worthy:</span> {client.petition_worthy ? 'Yes' : 'No'}</p>
+                <p><span className="font-medium">Damages (est):</span> {client.damages_estimate}</p>
               </div>
             </div>
           </section>
@@ -126,7 +141,7 @@ export function ClientDetails() {
           <section className="mt-6">
             <h2 className="text-xl font-semibold mb-2">Timeline</h2>
             <ul className="space-y-4">
-              {client.timeline?.map((event, index) => (
+              {client.timeline.map((event, index) => (
                 <li key={index} className="border-l-4 border-orange-500 pl-4">
                   <p className="font-medium">{event.type}</p>
                   <p>{event.description}</p>
