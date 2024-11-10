@@ -2,12 +2,26 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
+import { SidebarNav } from '@components/SidebarNav/SidebarNav';
+
+type TimelineEvent = {
+  type: string;
+  description: string;
+  date: string;
+};
 
 type Client = {
   id: number;
   name: string;
   issue: string;
-  location: string;
+  assignedTo: string;
+  createdOn: string;
+  createdBy: string;
+  urgency: string;
+  petitionWorthy: boolean;
+  damagesEstimate: string;
+  notes: string;
+  timeline: TimelineEvent[]; // Ensure timeline is always an array
 };
 
 export function ClientDetails() {
@@ -20,14 +34,15 @@ export function ClientDetails() {
       if (id) {
         const { data, error } = await supabase
           .from('users')
-          .select('id, name, issue, location')
+          .select('*') // Ensure 'timeline' is included in the query
           .eq('id', id)
           .single();
 
         if (error) {
           console.error('Error fetching client details:', error);
         } else {
-          setClient(data);
+          // Ensure 'timeline' is an array; if not, set a default empty array
+          setClient({ ...data, timeline: Array.isArray(data.timeline) ? data.timeline : [] });
         }
         setLoading(false);
       }
@@ -36,15 +51,77 @@ export function ClientDetails() {
     fetchClient();
   }, [id]);
 
-  if (loading) return <p>Loading...</p>;
+  if (loading) return <div className="flex justify-center items-center h-full"><p className="text-lg">Loading...</p></div>;
 
   return client ? (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold">{client.name}</h1>
-      <p className="text-lg">Issue: {client.issue}</p>
-      <p className="text-lg">Location: {client.location}</p>
+    <div className="flex min-h-screen bg-gray-50">
+      <main className="flex-grow p-8">
+        <div className="bg-white shadow rounded-lg p-6 space-y-6">
+          {/* Header */}
+          <h1 className="text-3xl font-bold mb-4">{client.name} - {client.issue}</h1>
+          
+          {/* Case Details */}
+          <section>
+            <h2 className="text-xl font-semibold mb-2">Case Details</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <p><span className="font-medium">Status:</span> Newly Added</p>
+                <p><span className="font-medium">Assigned To:</span> {client.assignedTo}</p>
+                <p><span className="font-medium">Created On:</span> {client.createdOn}</p>
+                <p><span className="font-medium">Created By:</span> {client.createdBy}</p>
+              </div>
+              <div className="space-y-2">
+                <p><span className="font-medium">Urgency:</span> {client.urgency}</p>
+                <p><span className="font-medium">Petition-Worthy:</span> {client.petitionWorthy ? 'Yes' : 'No'}</p>
+                <p><span className="font-medium">Damages (est):</span> {client.damagesEstimate}</p>
+              </div>
+            </div>
+          </section>
+          
+          {/* Generate Legal Draft Section */}
+          <section className="mt-6">
+            <h2 className="text-xl font-semibold mb-2">Generate Legal Draft</h2>
+            <p className="text-gray-600 mb-2">Optional: for a customized legal draft, upload similar petitions or legal documents.</p>
+            <div className="flex items-center space-x-4">
+              <button className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-medium">Generate</button>
+              <input type="file" className="border border-gray-300 rounded-lg p-2" />
+            </div>
+          </section>
+
+          {/* Tabs Section */}
+          <section className="mt-6">
+            <nav className="border-b border-gray-300 mb-4">
+              <ul className="flex space-x-4">
+                <li className="text-orange-600 font-semibold">Intake Process</li>
+                <li className="text-gray-600">Notes</li>
+                <li className="text-gray-600">Communications</li>
+                <li className="text-gray-600">Files</li>
+                <li className="text-gray-600">Legal Draft</li>
+              </ul>
+            </nav>
+            <div>
+              <h3 className="text-lg font-semibold mb-2">Initial Consultation</h3>
+              <p>{client.notes}</p>
+            </div>
+          </section>
+
+          {/* Timeline */}
+          <section className="mt-6">
+            <h2 className="text-xl font-semibold mb-2">Timeline</h2>
+            <ul className="space-y-4">
+              {client.timeline?.map((event, index) => (
+                <li key={index} className="border-l-4 border-orange-500 pl-4">
+                  <p className="font-medium">{event.type}</p>
+                  <p>{event.description}</p>
+                  <p className="text-sm text-gray-500">{event.date}</p>
+                </li>
+              ))}
+            </ul>
+          </section>
+        </div>
+      </main>
     </div>
   ) : (
-    <p>Client not found</p>
+    <div className="flex justify-center items-center h-full"><p className="text-lg">Client not found</p></div>
   );
 }
