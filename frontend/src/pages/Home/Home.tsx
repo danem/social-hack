@@ -9,9 +9,9 @@ import Transcriptor from '@components/Transcriptor/Transcriptor';
 export default function App() {
   return (
     <Router>
-      <div className="flex">
+      <div className="flex h-screen">
         <SidebarNav />
-        <main className="bg-gray-100 flex-grow p-8">
+        <main className="bg-gray-100 flex-grow p-8 overflow-y-scroll">
           <Routes>
             <Route path="/" element={<ClientManagement />} />
             <Route path="/client/:id" element={<ClientDetails />} />
