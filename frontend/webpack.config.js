@@ -115,6 +115,7 @@ module.exports = (env, options) => {
             new webpack.DefinePlugin({
                 'process.env.REACT_APP_SUPA_URL': JSON.stringify(process.env.REACT_APP_SUPA_URL),
                 'process.env.REACT_APP_ANON_API_KEY': JSON.stringify(process.env.REACT_APP_ANON_API_KEY),
+                'process.env.REACT_APP_OPENAI_API_KEY': JSON.stringify(process.env.REACT_APP_OPENAI_API_KEY)
             }),
         ],
         optimization: {
