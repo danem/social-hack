@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import supabase from './supabaseClient'; // Ensure this points to your configured Supabase client
 
 const Transcriptor = () => {
     const [transcription, setTranscription] = useState('');
@@ -47,7 +48,19 @@ const Transcriptor = () => {
                     });
 
                     const result = await response.json();
-                    setTranscription(result.text || 'Transcription failed');
+                    const text = result.text || 'Transcription failed';
+                    setTranscription(text);
+
+                    // Save the transcription to Supabase
+                    const { data, error } = await supabase
+                        .from('transcriptions')
+                        .insert([{ text }]); // Insert the transcription into the 'transcripts' table
+
+                    if (error) {
+                        console.error('Error saving to Supabase:', error);
+                    } else {
+                        console.log('Transcription saved to Supabase:', data);
+                    }
                 } catch (error) {
                     console.error('Error during transcription:', error);
                     setTranscription('Error during transcription');
