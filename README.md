@@ -1,1 +1,2 @@
-Top secret!
+- [Install UV](https://docs.astral.sh/uv/getting-started/installation/)
+- Download the associated packages: `uv venv && uv sync`
