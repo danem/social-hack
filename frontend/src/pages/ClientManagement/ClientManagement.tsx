@@ -1,7 +1,10 @@
-// ClientManagement.tsx
+// App.tsx
+import { SidebarNav } from "@components/SidebarNav/SidebarNav";
 import React, { useEffect, useState } from 'react';
+import { Link } from "react-router-dom";
 import { supabase } from '../../supabaseClient';
 
+// Define types for the data structures
 type Item = {
   id: number;
   name: string;
@@ -21,26 +24,25 @@ type ColumnProps = {
   items: Item[];
 };
 
-function Column({ title, count, items }: ColumnData) {
-  return (
-    <div className="bg-slate-200 p-4 rounded-lg shadow-md">
-      <div className="bg-white p-4 rounded-lg shadow">
-        <div className="flex flex-row gap-4 align-text-top align-middle mb-3">
-          <h2 className="text-lg font-semibold">{title}</h2>
-          <p className="text-sm text-gray-500 mb-2">{count}</p>
+function Column ({ title, count, items }: ColumnData){
+    return (
+        <div className="bg-slate-200 p-4 rounded-lg shadow-md">
+            <div className="bg-white p-4 rounded-lg shadow">
+                <div className="flex flex-row gap-4 align-text-top align-middle mb-3">
+                    <h2 className="text-lg font-semibold">{title}</h2>
+                    <p className="text-sm text-gray-500 mb-2">{count}</p>
+                </div>
+            {items.map((item, index) => (
+                <div key={index} className="bg-gray-100 hover:bg-slate-300 p-2 rounded-lg shadow-inner mb-2 cursor-pointer">
+                  <Link to='/client-details'>
+                    <p>{item.name} - {item.issue}</p>
+                    <p className="text-sm text-gray-500">{item.location}</p>
+                  </Link>
+                </div>
+            ))}
+            </div>
         </div>
-        {items.map((item, index) => (
-          <div
-            key={index}
-            className="bg-gray-100 hover:bg-slate-300 p-2 rounded-lg shadow-inner mb-2 cursor-pointer"
-          >
-            <p>{item.name} - {item.issue}</p>
-            <p className="text-sm text-gray-500">{item.location}</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+    );
 }
 
 export function ClientManagement() {
