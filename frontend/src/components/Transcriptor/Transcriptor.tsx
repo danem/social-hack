@@ -1,10 +1,10 @@
 import React, { useState, useRef } from 'react';
-import supabase from './supabaseClient'; // Ensure this points to your configured Supabase client
+import { supabase } from '@utils/supabaseClient';
 
-const Transcriptor = () => {
-    const [transcription, setTranscription] = useState('');
-    const [isRecording, setIsRecording] = useState(false);
-    const mediaRecorderRef = useRef(null);
+export default function Transcriptor() {
+    const [transcription, setTranscription] = useState<string>('');
+    const [isRecording, setIsRecording] = useState<boolean>(false);
+    const mediaRecorderRef = useRef<MediaRecorder | null>(null);
 
     const startRecording = async () => {
         try {
@@ -14,10 +14,10 @@ const Transcriptor = () => {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             mediaRecorderRef.current = new MediaRecorder(stream);
 
-            let chunks = [];
+            let chunks: Blob[] = [];
 
             // Collect audio data chunks
-            mediaRecorderRef.current.ondataavailable = (event) => {
+            mediaRecorderRef.current.ondataavailable = (event: BlobEvent) => {
                 if (event.data.size > 0) {
                     chunks.push(event.data);
                 }
@@ -54,7 +54,7 @@ const Transcriptor = () => {
                     // Save the transcription to Supabase
                     const { data, error } = await supabase
                         .from('transcriptions')
-                        .insert([{ text }]); // Insert the transcription into the 'transcripts' table
+                        .insert([{ text }]); // Insert the transcription into the 'transcriptions' table
 
                     if (error) {
                         console.error('Error saving to Supabase:', error);
@@ -90,6 +90,4 @@ const Transcriptor = () => {
             <p>Transcription: {transcription}</p>
         </div>
     );
-};
-
-export default Transcriptor;
+}

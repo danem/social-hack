@@ -2,7 +2,7 @@
 import { SidebarNav } from "@components/SidebarNav/SidebarNav";
 import React, { useEffect, useState } from 'react';
 import { Link } from "react-router-dom";
-import { supabase } from '../../supabaseClient';
+import { supabase } from "@utils/supabaseClient";
 
 // Define types for the data structures
 type Item = {
