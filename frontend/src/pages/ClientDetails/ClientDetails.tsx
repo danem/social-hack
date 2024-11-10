@@ -5,6 +5,7 @@ import { supabase } from '@utils/supabaseClient';
 import { SidebarNav } from '@components/SidebarNav/SidebarNav';
 import { Checklist } from '../Checklist/Checklist';
 import { fetchLatestTranscript, getActionItems, queryDocuments } from '../../models/documents';
+import { LegalDraft } from '../LegalDraft/LegalDraft';
 
 type TimelineEvent = {
   type: string;
@@ -233,14 +234,7 @@ export function ClientDetails() {
                 </div>
               )}
               {activeTab === 'Legal Draft' && (
-                <section className="mt-6">
-                  <h2 className="text-xl font-semibold mb-2">Generate Legal Draft</h2>
-                  <p className="text-gray-600 mb-2">Optional: for a customized legal draft, upload similar petitions or legal documents.</p>
-                  <div className="flex items-center space-x-4">
-                    <button className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-medium">Generate</button>
-                    <input type="file" className="border border-gray-300 rounded-lg p-2" />
-                  </div>
-                </section>
+                <LegalDraft />
               )}
             </div>
           </section>
