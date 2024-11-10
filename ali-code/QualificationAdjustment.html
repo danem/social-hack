@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qualification Criteria Settings</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            background: white;
+        }
+        h2 {
+            text-align: center;
+            color: #5a5a5a;
+        }
+        .criteria-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        label {
+            font-weight: bold;
+        }
+        input[type="text"], input[type="checkbox"] {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        .btn-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .additional-parameter {
+            margin-top: 10px;
+            padding: 10px;
+            border: 1px dashed #ccc;
+            border-radius: 4px;
+            background-color: #fafafa;
+        }
+    </style>
+</head>
+<body>
+    <h2>Qualification Criteria Settings</h2>
+    <form class="criteria-form">
+        <div>
+            <label for="programArea">Program Area:</label>
+            <div>
+                <input type="checkbox" id="sanMateo" name="programArea" value="San Mateo Area">
+                <label for="sanMateo">San Mateo Area</label>
+            </div>
+            <div>
+                <input type="checkbox" id="mountainView" name="programArea" value="Mountain View">
+                <label for="mountainView">Mountain View</label>
+            </div>
+            <div>
+                <input type="checkbox" id="eastPaloAlto" name="programArea" value="East Palo Alto">
+                <label for="eastPaloAlto">East Palo Alto</label>
+            </div>
+            <div>
+                <input type="checkbox" id="otherArea" name="programArea" value="Other">
+                <label for="otherArea">Other</label>
+            </div>
+        </div>
+        
+        <div>
+            <label for="incomeLevel">Income Level:</label>
+            <div>
+                <input type="checkbox" id="below30k" name="incomeLevel" value="Below $30,000">
+                <label for="below30k">Below $30,000</label>
+            </div>
+            <div>
+                <input type="checkbox" id="30kto60k" name="incomeLevel" value="$30,000 - $60,000">
+                <label for="30kto60k">$30,000 - $60,000</label>
+            </div>
+            <div>
+                <input type="checkbox" id="above60k" name="incomeLevel" value="Above $60,000">
+                <label for="above60k">Above $60,000</label>
+            </div>
+        </div>
+
+        <div>
+            <label for="householdSize">Household Size:</label>
+            <input type="text" id="householdSize" name="householdSize" placeholder="e.g., 4">
+        </div>
+
+        <div class="additional-parameter">
+            <p><strong>Add Additional Qualifying Parameter:</strong></p>
+            <div>
+                <label for="parameterName">Parameter Name:</label>
+                <input type="text" id="parameterName" name="parameterName" placeholder="e.g., Employment Status">
+            </div>
+            <div>
+                <label for="parameterValue">Parameter Value:</label>
+                <input type="text" id="parameterValue" name="parameterValue" placeholder="e.g., Full-Time">
+            </div>
+        </div>
+
+        <div class="btn-container">
+            <button type="button">Save Criteria</button>
+        </div>
+    </form>
+</body>
+</html>
