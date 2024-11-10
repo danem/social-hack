@@ -1,104 +1,80 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { createClient } from '@supabase/supabase-js';
-import * as sdk from 'microsoft-cognitiveservices-speech-sdk';
-
-// Initialize Supabase client
-const supabase = createClient(process.env.REACT_APP_SUPA_URL, process.env.REACT_APP_ANON_API_KEY);
+import React, { useState, useRef } from 'react';
 
 const Transcriptor = () => {
+    const [transcription, setTranscription] = useState('');
     const [isRecording, setIsRecording] = useState(false);
-    const [text, setText] = useState('');
-    const recognizerRef = useRef(null);
+    const mediaRecorderRef = useRef(null);
 
-    useEffect(() => {
-        // Subscribe to the 'transcriptions' table for real-time updates
-        const channel = supabase
-            .channel('transcriptions')
-            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'transcriptions' }, (payload) => {
-                setText(payload.new.text);
-            })
-            .subscribe();
+    const startRecording = async () => {
+        try {
+            setIsRecording(true);
 
-        // Cleanup subscription on component unmount
-        return () => {
-            supabase.removeChannel(channel);
-            if (recognizerRef.current) {
-                recognizerRef.current.close();
-            }
-        };
-    }, []);
+            // Get access to the microphone
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorderRef.current = new MediaRecorder(stream);
 
-    const handleRecordButtonClick = () => {
-        if (!isRecording) {
-            // Start recording and transcribing with Azure
-            try {
-                const speechConfig = sdk.SpeechConfig.fromSubscription(process.env.REACT_APP_AZURE_API_KEY, 'eastus'); // Replace 'eastus' with your region
-                speechConfig.speechRecognitionLanguage = 'en-US'; // Set the language
-                const audioConfig = sdk.AudioConfig.fromDefaultMicrophoneInput();
-                const recognizer = new sdk.SpeechRecognizer(speechConfig, audioConfig);
-                recognizerRef.current = recognizer; // Store recognizer in ref for proper handling
+            let chunks = [];
 
-                // Handle real-time transcription
-                recognizer.recognizing = (s, e) => {
-                    setText(e.result.text); // Replace current text with the new result
-                };
+            // Collect audio data chunks
+            mediaRecorderRef.current.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    chunks.push(event.data);
+                }
+            };
 
-                recognizer.recognized = async (s, e) => {
-                    if (e.result.reason === sdk.ResultReason.RecognizedSpeech) {
-                        console.log('Recognized:', e.result.text);
+            // Handle stopping and sending audio data
+            mediaRecorderRef.current.onstop = async () => {
+                const audioBlob = new Blob(chunks, { type: 'audio/webm' });
+                chunks = [];
 
-                        // Save recognized text to Supabase
-                        await supabase.from('transcriptions').insert([{ text: e.result.text }]);
-                    }
-                };
-
-                recognizer.canceled = (s, e) => {
-                    console.error('Recognition canceled:', e.reason);
-                    recognizer.stopContinuousRecognitionAsync(() => {
-                        setIsRecording(false);
-                        console.log('Recognition stopped.');
-                    });
-                };
-
-                recognizer.sessionStopped = (s, e) => {
-                    console.log('Session stopped.');
-                    recognizer.stopContinuousRecognitionAsync(() => {
-                        setIsRecording(false);
-                        console.log('Recognition stopped.');
-                    });
-                };
-
-                recognizer.startContinuousRecognitionAsync(() => {
-                    console.log('Recognition started.');
+                // Convert Blob to a File to send to the API
+                const audioFile = new File([audioBlob], 'audio.webm', {
+                    type: 'audio/webm',
                 });
-                setIsRecording(true);
-                setText('Recording in progress...');
-            } catch (error) {
-                console.error('Error starting Azure Speech service:', error);
-                setText('Error starting Azure Speech service.');
-            }
-        } else {
-            // Stop recording
+
+                // Create FormData to send the audio file
+                const formData = new FormData();
+                formData.append('file', audioFile);
+                formData.append('model', 'whisper-1');
+
+                try {
+                    const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${process.env.REACT_APP_OPENAI_API_KEY}`
+                        },
+                        body: formData
+                    });
+
+                    const result = await response.json();
+                    setTranscription(result.text || 'Transcription failed');
+                } catch (error) {
+                    console.error('Error during transcription:', error);
+                    setTranscription('Error during transcription');
+                }
+            };
+
+            mediaRecorderRef.current.start();
+        } catch (error) {
+            console.error('Error accessing the microphone:', error);
             setIsRecording(false);
-            if (recognizerRef.current) {
-                recognizerRef.current.stopContinuousRecognitionAsync(() => {
-                    console.log('Stopped recording.');
-                    setText('Recording stopped.');
-                    recognizerRef.current.close(); // Close recognizer to free up resources
-                }, (error) => {
-                    console.error('Error stopping recognition:', error);
-                    setIsRecording(false);
-                });
-            }
+        }
+    };
+
+    const stopRecording = () => {
+        if (mediaRecorderRef.current) {
+            mediaRecorderRef.current.stop();
+            setIsRecording(false);
         }
     };
 
     return (
         <div>
-            <button onClick={handleRecordButtonClick}>
-                {isRecording ? 'Stop Recording' : 'Start Recording'}
-            </button>
-            <p>{text}</p>
+            <h1>Live Transcription with OpenAI Whisper</h1>
+            <button onClick={startRecording} disabled={isRecording}>Start Recording</button>
+            <button onClick={stopRecording} disabled={!isRecording}>Stop Recording</button>
+            <p>{isRecording ? 'Recording...' : 'Recording stopped.'}</p>
+            <p>Transcription: {transcription}</p>
         </div>
     );
 };
