@@ -1,11 +1,13 @@
 const path = require('path');
 const package = require('./package.json');
+require('dotenv').config();
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const TerserPlugin = require('terser-webpack-plugin');
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 const CopyPlugin = require('copy-webpack-plugin');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+const webpack = require('webpack'); // Import webpack
 
 module.exports = (env, options) => {
     const devMode = options.mode === 'development';
@@ -109,6 +111,11 @@ module.exports = (env, options) => {
                     useShortDoctype: true
                 }
             }),
+            // Add DefinePlugin to expose environment variables
+            new webpack.DefinePlugin({
+                'process.env.REACT_APP_SUPA_URL': JSON.stringify(process.env.REACT_APP_SUPA_URL),
+                'process.env.REACT_APP_ANON_API_KEY': JSON.stringify(process.env.REACT_APP_ANON_API_KEY),
+            }),
         ],
         optimization: {
             minimizer: [
@@ -123,7 +130,6 @@ module.exports = (env, options) => {
                 new CssMinimizerPlugin()
             ]
         },
-        // Add devServer configuration
         devServer: {
             static: {
                 directory: path.join(__dirname, 'dist')

@@ -1,10 +1,12 @@
 // App.tsx
 import { SidebarNav } from "@components/SidebarNav/SidebarNav";
-import React from "react";
+import React, { useEffect, useState } from 'react';
 import { Link } from "react-router-dom";
+import { supabase } from '../../supabaseClient';
 
 // Define types for the data structures
 type Item = {
+  id: number;
   name: string;
   issue: string;
   location: string;
@@ -16,7 +18,6 @@ type ColumnData = {
   items: Item[];
 };
 
-// Column component
 type ColumnProps = {
   title: string;
   count: number;
@@ -44,54 +45,42 @@ function Column ({ title, count, items }: ColumnData){
     );
 }
 
-// Main App component
-export function ClientManagement () {
-  const columnsData: ColumnData[] = [
-    {
-      title: "Newly Added",
-      count: 1,
-      items: [{ name: "Betsy Cole", issue: "Mold", location: "East Palo Alto" }]
-    },
-    {
-      title: "Consultation Scheduled",
-      count: 4,
-      items: [
-        { name: "Steve Johnson", issue: "Roof", location: "East Palo Alto" },
-        { name: "Frank Brown", issue: "Plumbing", location: "San Mateo" },
-        { name: "Anna Johnson", issue: "Mold", location: "East Palo Alto" },
-        { name: "Teresa Smith", issue: "Mold", location: "Mountain View" }
-      ]
-    },
-    {
-      title: "Pending Client Information",
-      count: 2,
-      items: [
-        { name: "Michael Suarez", issue: "Plumbing", location: "East Palo Alto" },
-        { name: "Nancy Landon", issue: "Windows", location: "San Mateo" }
-      ]
-    },
-    {
-      title: "Pending Petition",
-      count: 3,
-      items: [
-        { name: "Wendy Manfield", issue: "Plumbing", location: "East Palo Alto" },
-        { name: "Ian Goldberg", issue: "Mold", location: "Mountain View" },
-        { name: "Janet Martinez", issue: "Mold", location: "East Palo Alto" }
-      ]
-    }
-  ];
+export function ClientManagement() {
+  const [columnsData, setColumnsData] = useState<ColumnData[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const { data, error } = await supabase.from('users').select('id, name, issue, location');
+      if (error) {
+        console.error('Error fetching data:', error);
+        return;
+      }
+
+      // Group the data as needed (example based on issue type)
+      const groupedData = [
+        {
+          title: 'Client List',
+          count: data.length,
+          items: data
+        }
+      ];
+
+      setColumnsData(groupedData);
+    };
+
+    fetchData();
+  }, []);
 
   return (
     <div className="grid grid-cols-4 gap-4">
-        {columnsData.map((column, index) => (
+      {columnsData.map((column, index) => (
         <Column
-            key={index}
-            title={column.title}
-            count={column.count}
-            items={column.items}
+          key={index}
+          title={column.title}
+          count={column.count}
+          items={column.items}
         />
-        ))}
+      ))}
     </div>
   );
 }
-
