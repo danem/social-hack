@@ -58,7 +58,7 @@ export async function queryDocuments (text: string){
 
 export async function getActionItems (transcript: string) {
     const prompt = `
-    Extract all action items for the tenant from the following transcript and list them in a JSON format with a "task" field for each action item. Action items are things like "get photos", "get communications with landlord", etc. Action items are also things NOT answered in the transcript. Do not include things like name, occupation, duration of lease, etc.
+    Extract all action items for the tenant from the following transcript and list them in a JSON format with a "task" field for each action item. Action items are things like "get photos", "get communications with landlord", etc. Action items are also things NOT answered in the transcript. Do not include things like name, occupation, duration of lease, etc
     
     Transcript: "${transcript}"
     
