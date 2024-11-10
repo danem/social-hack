@@ -24,25 +24,25 @@ type ColumnProps = {
   items: Item[];
 };
 
-function Column ({ title, count, items }: ColumnData){
-    return (
-        <div className="bg-slate-200 p-4 rounded-lg shadow-md">
-            <div className="bg-white p-4 rounded-lg shadow">
-                <div className="flex flex-row gap-4 align-text-top align-middle mb-3">
-                    <h2 className="text-lg font-semibold">{title}</h2>
-                    <p className="text-sm text-gray-500 mb-2">{count}</p>
-                </div>
-            {items.map((item, index) => (
-                <div key={index} className="bg-gray-100 hover:bg-slate-300 p-2 rounded-lg shadow-inner mb-2 cursor-pointer">
-                  <Link to='/client-details'>
-                    <p>{item.name} - {item.issue}</p>
-                    <p className="text-sm text-gray-500">{item.location}</p>
-                  </Link>
-                </div>
-            ))}
-            </div>
+function Column ({ title, count, items }: ColumnData) {
+  return (
+    <div className="bg-slate-200 p-4 rounded-lg shadow-md">
+      <div className="bg-white p-4 rounded-lg shadow">
+        <div className="flex flex-row gap-4 align-text-top align-middle mb-3">
+          <h2 className="text-lg font-semibold">{title}</h2>
+          <p className="text-sm text-gray-500 mb-2">{count}</p>
         </div>
-    );
+        {items.map((item, index) => (
+          <div key={index} className="bg-gray-100 hover:bg-slate-300 p-2 rounded-lg shadow-inner mb-2 cursor-pointer">
+            <Link to={`/client/${item.id}`}>
+              <p>{item.name} - {item.issue}</p>
+              <p className="text-sm text-gray-500">{item.location}</p>
+            </Link>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 export function ClientManagement() {
@@ -56,16 +56,22 @@ export function ClientManagement() {
         return;
       }
 
-      // Group the data as needed (example based on issue type)
-      const groupedData = [
-        {
-          title: 'Client List',
-          count: data.length,
-          items: data
-        }
+      // Categorize data into columns based on `issue` type or any other criteria
+      const columns = [
+        { title: 'Mold Issues', items: data.filter((item: Item) => item.issue === 'Mold') },
+        { title: 'Plumbing Issues', items: data.filter((item: Item) => item.issue === 'Plumbing') },
+        { title: 'Roof Issues', items: data.filter((item: Item) => item.issue === 'Roof') },
+        { title: 'Window Issues', items: data.filter((item: Item) => item.issue === 'Windows') },
       ];
 
-      setColumnsData(groupedData);
+      // Assign the count to each column
+      const formattedColumnsData: ColumnData[] = columns.map((col) => ({
+        title: col.title,
+        count: col.items.length,
+        items: col.items
+      }));
+
+      setColumnsData(formattedColumnsData);
     };
 
     fetchData();
