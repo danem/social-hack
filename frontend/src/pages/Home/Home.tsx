@@ -5,6 +5,7 @@ import { ClientManagement } from '../ClientManagement/ClientManagement';
 import { ClientDetails } from '../ClientDetails/ClientDetails';
 import { SidebarNav } from '@components/SidebarNav/SidebarNav';
 import Transcriptor from '@components/Transcriptor/Transcriptor';
+import QualificationCriteria from '@components/QualitificationCriteria/QualificationCriteria';
 
 export default function App() {
   return (
@@ -16,6 +17,7 @@ export default function App() {
             <Route path="/" element={<ClientManagement />} />
             <Route path="/client/:id" element={<ClientDetails />} />
             <Route path="/voice" element={<Transcriptor />} />
+            <Route path="/qual" element={<QualificationCriteria />} />
           </Routes>
         </main>
       </div>
